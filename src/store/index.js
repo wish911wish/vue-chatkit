@@ -28,7 +28,7 @@ export default new Vuex.Store({
   mutations,
   actions,
   getters: {
-    hasError: state => state.error
+    hasError: state => state.error || false
   },
   plugins: [vuexLocal.plugin],
   strict: debug
