@@ -17,9 +17,22 @@ export default {
         username: currentUser.id,
         name: currentUser.name
       })
-      commit('setReconnect', false)
+      // Save list of user's rooms in store
+      const rooms = currentUser.rooms.map(room => ({
+        id: room.id,
+        name: room.name
+      }))
+      commit('setRooms', rooms)
 
-      // Test state.user
+      // Subscribe user to a room
+      const activeRoom = state.activeRoom || rooms[0] // pick last used room, or the first one
+      commit('setActiveRoom', {
+        id: activeRoom.id,
+        name: activeRoom.name
+      })
+      await chatkit.subscribeToRoom(activeRoom.id)
+
+      return true
     } catch (error) {
       handleError(commit, error)
     } finally {
@@ -33,5 +46,22 @@ export default {
     } catch (error) {
       handleError(commit, error)
     }
+  },
+  async sendMessage ({ commit }, message) {
+    try {
+      commit('setError', '')
+      commit('setSending', true)
+      const messageId = await chatkit.sendMessage(message)
+      return messageId
+    } catch (error) {
+      handleError(commit, error)
+    } finally {
+      commit('setSending', false)
+    }
+  },
+  async logout ({ commit }) {
+    commit('reset')
+    chatkit.disconnectUser()
+    window.localStorage.clear()
   }
 }
